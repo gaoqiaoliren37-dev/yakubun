@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -61,10 +62,15 @@
     <!-- メインのアプリコンテナ -->
     <div class="w-full max-w-4xl bg-white rounded-[2.5rem] shadow-2xl p-6 md:p-10 border-8 border-orange-200">
         
-        <!-- タイトル -->
-        <h1 class="text-3xl md:text-5xl font-black text-center text-orange-500 mb-8 drop-shadow-sm">
-            🌟 ぶんすう マスター 🌟
-        </h1>
+        <!-- タイトルと保存状態 -->
+        <div class="relative mb-8">
+            <h1 class="text-3xl md:text-5xl font-black text-center text-orange-500 drop-shadow-sm">
+                🌟 ぶんすう マスター 🌟
+            </h1>
+            <div id="save-status" class="absolute right-0 top-0 text-xs font-bold text-gray-400">
+                ☁️ クラウドじゅんび中...
+            </div>
+        </div>
 
         <!-- モード切り替えボタン -->
         <div class="flex flex-wrap justify-center gap-3 md:gap-5 mb-8">
@@ -133,12 +139,27 @@
 
     </div>
 
-    <!-- JavaScript ロジック -->
-    <script>
+    <!-- JavaScript ロジック (モジュール化してクラウド保存に対応) -->
+    <script type="module">
+        // Firebase の各種機能のインポート
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // クラウドデータベース(Firebase)の初期設定
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        let currentUser = null;
+        let isCloudReady = false;
+
         let currentMode = 'simplify';
-        let currentAnswer = {}; // 現在の問題の正解データを保持するオブジェクト
-        let currentProblemStr = ''; // 履歴表示用の問題テキスト
-        let hasCountedCurrentProblem = false; // 同じ問題での重複カウントを防ぐフラグ
+        let currentAnswer = {};
+        let currentProblemStr = '';
+        let hasCountedCurrentProblem = false;
 
         // 成績データを保持するオブジェクト
         let stats = {
@@ -156,6 +177,7 @@
         const elFeedback = document.getElementById('feedback');
         const btnCheck = document.getElementById('btn-check');
         const btnNext = document.getElementById('btn-next');
+        const elSaveStatus = document.getElementById('save-status');
 
         const btns = {
             'simplify': document.getElementById('btn-simplify'),
@@ -163,7 +185,76 @@
             'imp2mix': document.getElementById('btn-imp2mix')
         };
 
-        // 最大公約数を求める関数（約分の問題生成に必要）
+        // --- クラウドへのログインとデータの同期 ---
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("ログインエラー:", error);
+                elSaveStatus.innerText = "⚠️ ほぞんエラー";
+                elSaveStatus.classList.add("text-red-400");
+            }
+        };
+
+        let unsubscribeSnapshot = null;
+
+        // ログイン状態が確定したときの処理
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                
+                // クラウドからユーザー個人のデータ（成績・履歴）を監視して読み込む
+                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'fraction_data', 'userData');
+                
+                unsubscribeSnapshot = onSnapshot(docRef, (snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.data();
+                        if (data.stats) stats = data.stats;
+                        if (data.historyLog) historyLog = data.historyLog;
+                    }
+                    isCloudReady = true;
+                    elSaveStatus.innerText = "☁️ クラウドにほぞん済";
+                    elSaveStatus.classList.remove("text-gray-400");
+                    elSaveStatus.classList.add("text-green-500");
+                    updateStatsUI(); // データを画面に反映
+                }, (error) => {
+                    console.error("データの読み込みエラー:", error);
+                });
+            } else {
+                currentUser = null;
+                isCloudReady = false;
+                if (unsubscribeSnapshot) unsubscribeSnapshot();
+            }
+        });
+
+        // アプリ起動時にログイン開始
+        initAuth();
+
+        // データをクラウドに保存する関数
+        async function saveProgress() {
+            if (!currentUser || !isCloudReady) return;
+            
+            elSaveStatus.innerText = "☁️ ほぞん中...";
+            elSaveStatus.classList.replace("text-green-500", "text-orange-400");
+
+            const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'fraction_data', 'userData');
+            try {
+                // データをドキュメントに書き込む
+                await setDoc(docRef, { stats: stats, historyLog: historyLog });
+                elSaveStatus.innerText = "☁️ クラウドにほぞん済";
+                elSaveStatus.classList.replace("text-orange-400", "text-green-500");
+            } catch (error) {
+                console.error("保存エラー:", error);
+                elSaveStatus.innerText = "⚠️ ほぞん失敗";
+                elSaveStatus.classList.replace("text-orange-400", "text-red-500");
+            }
+        }
+
+        // 最大公約数を求める関数
         function gcd(a, b) {
             return b === 0 ? a : gcd(b, a % b);
         }
@@ -175,67 +266,59 @@
 
         // 新しい問題を生成し、画面に描画する関数
         function generateProblem() {
-            elFeedback.innerHTML = ''; // フィードバックをクリア
-            hasCountedCurrentProblem = false; // 問題が変わったらカウント可能にする
+            elFeedback.innerHTML = '';
+            hasCountedCurrentProblem = false;
             
             if (currentMode === 'simplify') {
                 elInstruction.innerText = '💡 やくぶん しよう！';
-                
-                // 互いに素な（これ以上約分できない）分母と分子を生成
                 let d, n;
                 do {
                     d = getRandomInt(2, 9);
                     n = getRandomInt(1, d - 1);
                 } while (gcd(n, d) !== 1);
-                
-                // 掛ける数を決めて、約分前の分数を生成
                 const multiplier = getRandomInt(2, 5);
                 const qn = n * multiplier;
                 const qd = d * multiplier;
                 
-                currentAnswer = { num: n, den: d }; // 答えを記録
-                currentProblemStr = `${qn}/${qd}`; // 履歴用に記録
+                currentAnswer = { num: n, den: d };
+                currentProblemStr = `${qn}/${qd}`;
                 
-                renderFraction(elQuestion, null, qn, qd); // 問題を表示
-                renderInput(elAnswer, false); // 入力欄を表示（帯分数用の整数枠はなし）
+                renderFraction(elQuestion, null, qn, qd);
+                renderInput(elAnswer, false);
                 
             } else if (currentMode === 'mix2imp') {
                 elInstruction.innerText = '➡️ かぶんすう に なおそう！';
-                
-                const w = getRandomInt(1, 5); // 整数部分
-                const d = getRandomInt(2, 9); // 分母
-                const n = getRandomInt(1, d - 1); // 分子
+                const w = getRandomInt(1, 5);
+                const d = getRandomInt(2, 9);
+                const n = getRandomInt(1, d - 1);
                 
                 currentAnswer = { num: w * d + n, den: d };
-                currentProblemStr = `${w}と${n}/${d}`; // 履歴用に記録
+                currentProblemStr = `${w}と${n}/${d}`;
                 
                 renderFraction(elQuestion, w, n, d);
                 renderInput(elAnswer, false);
                 
             } else if (currentMode === 'imp2mix') {
                 elInstruction.innerText = '⬅️ たいぶんすう に なおそう！';
-                
                 const w = getRandomInt(1, 5);
                 const d = getRandomInt(2, 9);
                 const n = getRandomInt(1, d - 1);
-                const qn = w * d + n; // 仮分数の分子
+                const qn = w * d + n;
                 
                 currentAnswer = { whole: w, num: n, den: d };
-                currentProblemStr = `${qn}/${d}`; // 履歴用に記録
+                currentProblemStr = `${qn}/${d}`;
                 
                 renderFraction(elQuestion, null, qn, d);
-                renderInput(elAnswer, true); // 入力欄を表示（帯分数用の整数枠あり）
+                renderInput(elAnswer, true);
             }
         }
 
-        // 問題の分数を画面に描画する関数（Flexboxで本格的な上下レイアウト）
+        // 問題の分数を画面に描画する関数
         function renderFraction(container, whole, num, den) {
             let html = '<div class="flex items-center justify-center text-blue-900">';
-            // 帯分数の場合の整数部分
             if (whole !== null) {
                 html += `<div class="text-7xl md:text-8xl font-black mr-3 mb-2">${whole}</div>`;
             }
-            // 分数部分
             html += `
                 <div class="flex flex-col items-center justify-center">
                     <div class="text-6xl md:text-7xl font-bold leading-none mb-2">${num}</div>
@@ -250,11 +333,9 @@
         // 入力欄を画面に描画する関数
         function renderInput(container, hasWhole) {
             let html = '<div class="flex items-center justify-center">';
-            // 帯分数の場合の整数入力枠
             if (hasWhole) {
                 html += `<input type="number" id="ans-whole" placeholder="?" class="w-20 h-24 md:w-28 md:h-32 text-5xl md:text-7xl text-center border-4 border-pink-300 rounded-2xl focus:outline-none focus:border-pink-500 mr-4 font-bold text-gray-800 shadow-inner bg-white placeholder-gray-300 transition" />`;
             }
-            // 分数入力枠
             html += `
                 <div class="flex flex-col items-center justify-center">
                     <input type="number" id="ans-num" placeholder="?" class="w-20 h-20 md:w-28 md:h-24 text-5xl md:text-6xl text-center border-4 border-green-300 rounded-2xl focus:outline-none focus:border-green-500 mb-2 font-bold text-gray-800 shadow-inner bg-white placeholder-gray-300 transition" />
@@ -265,7 +346,6 @@
             html += '</div>';
             container.innerHTML = html;
             
-            // 少し遅らせてから最初の入力欄にフォーカスを当てる（PC向け）
             setTimeout(() => {
                 if(hasWhole && document.getElementById('ans-whole')) {
                     document.getElementById('ans-whole').focus();
@@ -285,7 +365,6 @@
             const inputNum = elNum.value;
             const inputDen = elDen.value;
             
-            // 空欄チェック
             if (inputNum === '' || inputDen === '') {
                 showFeedback(false, '⚠️ くうらん があるよ！');
                 return;
@@ -295,7 +374,6 @@
             const d = parseInt(inputDen, 10);
             let isCorrect = false;
 
-            // モード別の正誤判定
             if (currentMode === 'simplify' || currentMode === 'mix2imp') {
                 if (n === currentAnswer.num && d === currentAnswer.den) {
                     isCorrect = true;
@@ -314,8 +392,7 @@
                 }
             }
 
-            // --- 成績と履歴の記録 ---
-            // 1つの問題につき、最初の1回目の「こたえあわせ」のみを集計の対象とする
+            // --- 成績と履歴の記録と保存 ---
             if (!hasCountedCurrentProblem) {
                 stats.total.attempts++;
                 stats[currentMode].attempts++;
@@ -325,7 +402,6 @@
                     stats[currentMode].corrects++;
                 }
 
-                // ユーザーの入力内容を文字列にする
                 let userAnswerStr = '';
                 if (currentMode === 'imp2mix') {
                     const w = document.getElementById('ans-whole').value;
@@ -336,6 +412,7 @@
 
                 const modeNames = { 'simplify': 'やくぶん', 'mix2imp': 'かぶんすうへ', 'imp2mix': 'たいぶんすうへ' };
                 
+                // 履歴の一番上に追加
                 historyLog.unshift({
                     mode: modeNames[currentMode],
                     problem: currentProblemStr,
@@ -343,8 +420,14 @@
                     isCorrect: isCorrect
                 });
 
+                // データが大きくなりすぎないように、直近100件に制限する
+                if (historyLog.length > 100) {
+                    historyLog = historyLog.slice(0, 100);
+                }
+
                 hasCountedCurrentProblem = true;
-                updateStatsUI(); // 画面の成績表示を更新
+                updateStatsUI(); // 画面更新
+                saveProgress();  // クラウドに保存
             }
 
             // 結果の表示
@@ -355,7 +438,6 @@
             }
         }
 
-        // フィードバック（アニメーション文字）を表示する関数
         function showFeedback(isCorrect, text) {
             if (isCorrect) {
                 elFeedback.innerHTML = `<div class="text-4xl md:text-5xl text-red-500 font-black animate-pop-in drop-shadow-md tracking-wider">${text}</div>`;
@@ -414,7 +496,7 @@
             });
         }
 
-        // 履歴表示のトグルボタンの処理
+        // イベントリスナーの登録：履歴表示のトグル
         const btnToggleHistory = document.getElementById('btn-toggle-history');
         const historyList = document.getElementById('history-list');
         btnToggleHistory.addEventListener('click', () => {
@@ -429,17 +511,15 @@
         // イベントリスナーの登録：モード切替ボタン
         Object.keys(btns).forEach(mode => {
             btns[mode].addEventListener('click', () => {
-                // すべてのボタンのスタイルを非アクティブ（少し透明）にする
                 Object.values(btns).forEach(btn => {
                     btn.classList.remove('opacity-100', 'ring-4', 'ring-offset-2', 'ring-orange-400', 'scale-105');
                     btn.classList.add('opacity-60');
                 });
-                // 押されたボタンをアクティブ（強調）にする
                 btns[mode].classList.remove('opacity-60');
                 btns[mode].classList.add('opacity-100', 'ring-4', 'ring-offset-2', 'ring-orange-400', 'scale-105');
                 
                 currentMode = mode;
-                generateProblem(); // モードを変えたら新しい問題を作る
+                generateProblem();
             });
         });
 
@@ -447,17 +527,20 @@
         btnCheck.addEventListener('click', checkAnswer);
         btnNext.addEventListener('click', generateProblem);
 
-        // Enterキーを押した時にも答え合わせをする（PCキーボード・タブレット用）
+        // Enterキーを押した時にも答え合わせをする
         document.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 checkAnswer();
             }
         });
 
-        // アプリ起動時の初期化処理（やくぶんモードを選択状態にする）
+        // アプリ起動時の初期化処理
         updateStatsUI();
         btns['simplify'].click();
 
     </script>
 </body>
 </html>
+
+
+```
