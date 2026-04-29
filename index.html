@@ -4,21 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🌟 ぶんすう マスター 🌟</title>
-    <!-- Google Fonts: 子供向けの丸っこくて可愛いフォント -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS (CDN) -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Tailwindのカスタム設定（アニメーションとフォント）
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['"Zen Maru Gothic"', 'sans-serif'],
-                    },
+                    fontFamily: { sans: ['"Zen Maru Gothic"', 'sans-serif'] },
                     animation: {
                         'pop-in': 'pop-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
                         'shake': 'shake 0.6s ease-in-out',
@@ -40,48 +37,57 @@
         }
     </script>
     <style>
-        /* input type="number" の上下矢印（スピンボタン）を非表示にする */
         input[type="number"]::-webkit-outer-spin-button,
         input[type="number"]::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
-        input[type="number"] {
-            -moz-appearance: textfield;
-        }
-        
-        /* 押し込んだ時のボタンの挙動をスムーズにするための設定 */
-        button {
-            touch-action: manipulation;
-        }
+        input[type="number"] { -moz-appearance: textfield; }
+        button { touch-action: manipulation; }
     </style>
 </head>
 <body class="bg-yellow-50 text-gray-800 min-h-screen p-4 flex flex-col items-center justify-center font-sans selection:bg-pink-300">
 
-    <!-- メインのアプリコンテナ -->
     <div class="w-full max-w-4xl bg-white rounded-[2.5rem] shadow-2xl p-6 md:p-10 border-8 border-orange-200">
         
-        <!-- タイトル -->
-        <h1 class="text-3xl md:text-5xl font-black text-center text-orange-500 mb-8 drop-shadow-sm">
+        <h1 class="text-3xl md:text-5xl font-black text-center text-orange-500 mb-6 drop-shadow-sm">
             🌟 ぶんすう マスター 🌟
         </h1>
 
+        <!-- 難易度切り替えボタン -->
+        <div class="flex justify-center gap-2 md:gap-4 mb-6">
+            <button class="level-btn bg-red-400 text-white shadow-inner font-bold py-2 px-4 md:px-6 rounded-full text-sm md:text-lg transition transform" data-level="1">
+                ⭐ レベル1
+            </button>
+            <button class="level-btn bg-gray-200 text-gray-500 hover:bg-gray-300 font-bold py-2 px-4 md:px-6 rounded-full text-sm md:text-lg transition transform" data-level="2">
+                ⭐⭐ レベル2
+            </button>
+            <button class="level-btn bg-gray-200 text-gray-500 hover:bg-gray-300 font-bold py-2 px-4 md:px-6 rounded-full text-sm md:text-lg transition transform" data-level="3">
+                ⭐⭐⭐ レベル3
+            </button>
+        </div>
+
         <!-- モード切り替えボタン -->
-        <div class="flex flex-wrap justify-center gap-3 md:gap-5 mb-8">
-            <button id="btn-simplify" class="mode-btn bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-3 px-5 rounded-full text-lg md:text-2xl shadow-md transition transform">
+        <div class="flex flex-wrap justify-center gap-2 md:gap-3 mb-8">
+            <button id="btn-simplify" class="mode-btn bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-xl text-base md:text-xl shadow-md transition transform">
                 ✨ やくぶん
             </button>
-            <button id="btn-mix2imp" class="mode-btn bg-green-400 hover:bg-green-500 text-white font-bold py-3 px-5 rounded-full text-lg md:text-2xl shadow-md transition transform">
-                ➡️ かぶんすう へ
+            <button id="btn-mix2imp" class="mode-btn bg-green-400 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-xl text-base md:text-xl shadow-md transition transform">
+                ➡️ かぶんすう
             </button>
-            <button id="btn-imp2mix" class="mode-btn bg-pink-400 hover:bg-pink-500 text-white font-bold py-3 px-5 rounded-full text-lg md:text-2xl shadow-md transition transform">
-                ⬅️ たいぶんすう へ
+            <button id="btn-imp2mix" class="mode-btn bg-pink-400 hover:bg-pink-500 text-white font-bold py-2 px-4 rounded-xl text-base md:text-xl shadow-md transition transform">
+                ⬅️ たいぶんすう
+            </button>
+            <button id="btn-frac2dec" class="mode-btn bg-purple-400 hover:bg-purple-500 text-white font-bold py-2 px-4 rounded-xl text-base md:text-xl shadow-md transition transform">
+                🔢 分数 ➡️ 小数
+            </button>
+            <button id="btn-dec2frac" class="mode-btn bg-teal-400 hover:bg-teal-500 text-white font-bold py-2 px-4 rounded-xl text-base md:text-xl shadow-md transition transform">
+                🔢 小数 ➡️ 分数
             </button>
         </div>
 
         <!-- 問題表示エリア -->
-        <div class="bg-blue-50 rounded-[2rem] p-6 md:p-10 mb-8 border-4 border-blue-200 relative overflow-hidden">
-            <!-- 装飾の背景要素 -->
+        <div class="bg-blue-50 rounded-[2rem] p-6 md:p-10 mb-8 border-4 border-blue-200 relative overflow-hidden min-h-[250px] flex flex-col justify-center">
             <div class="absolute top-[-20px] left-[-20px] text-6xl opacity-20">☁️</div>
             <div class="absolute bottom-[-20px] right-[-20px] text-6xl opacity-20">🎈</div>
 
@@ -89,22 +95,15 @@
                 もんだい
             </h2>
             
-            <div class="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12 relative z-10">
-                <!-- 左側：問題の分数（JSで挿入） -->
+            <div class="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 relative z-10">
                 <div id="question-container" class="flex items-center justify-center"></div>
-
-                <!-- 真ん中：イコール -->
                 <div class="text-5xl md:text-7xl font-bold text-gray-400">＝</div>
-
-                <!-- 右側：入力欄（JSで挿入） -->
                 <div id="answer-container" class="flex items-center justify-center"></div>
             </div>
         </div>
 
-        <!-- フィードバック（正解・不正解のメッセージ） -->
         <div id="feedback" class="h-24 flex items-center justify-center mb-6"></div>
 
-        <!-- アクションボタン群 -->
         <div class="flex flex-col sm:flex-row justify-center gap-4 mb-8">
             <button id="btn-check" class="bg-red-500 hover:bg-red-600 text-white font-black py-4 px-8 rounded-full text-2xl md:text-3xl shadow-xl transition transform hover:scale-105 active:scale-95">
                 ✅ こたえあわせ
@@ -117,7 +116,7 @@
         <!-- せいせきエリア -->
         <div class="bg-gray-50 rounded-[2rem] p-6 border-4 border-gray-200">
             <h3 class="text-xl md:text-2xl font-black text-center text-gray-700 mb-4">📊 せいせき</h3>
-            <div id="stats-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-lg mb-4">
+            <div id="stats-container" class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 text-sm md:text-lg mb-4">
                 <!-- JSで成績がここに挿入されます -->
             </div>
             
@@ -136,20 +135,21 @@
     <!-- JavaScript ロジック -->
     <script>
         let currentMode = 'simplify';
-        let currentAnswer = {}; // 現在の問題の正解データを保持するオブジェクト
-        let currentProblemStr = ''; // 履歴表示用の問題テキスト
-        let hasCountedCurrentProblem = false; // 同じ問題での重複カウントを防ぐフラグ
+        let currentLevel = 1;
+        let currentAnswer = {}; 
+        let currentProblemStr = ''; 
+        let hasCountedCurrentProblem = false; 
 
-        // 成績データを保持するオブジェクト
         let stats = {
             total: { attempts: 0, corrects: 0 },
             simplify: { attempts: 0, corrects: 0 },
             mix2imp: { attempts: 0, corrects: 0 },
-            imp2mix: { attempts: 0, corrects: 0 }
+            imp2mix: { attempts: 0, corrects: 0 },
+            frac2dec: { attempts: 0, corrects: 0 },
+            dec2frac: { attempts: 0, corrects: 0 }
         };
-        let historyLog = []; // 解答履歴の配列
+        let historyLog = []; 
 
-        // DOM要素の取得
         const elQuestion = document.getElementById('question-container');
         const elAnswer = document.getElementById('answer-container');
         const elInstruction = document.getElementById('instruction-text');
@@ -160,237 +160,241 @@
         const btns = {
             'simplify': document.getElementById('btn-simplify'),
             'mix2imp': document.getElementById('btn-mix2imp'),
-            'imp2mix': document.getElementById('btn-imp2mix')
+            'imp2mix': document.getElementById('btn-imp2mix'),
+            'frac2dec': document.getElementById('btn-frac2dec'),
+            'dec2frac': document.getElementById('btn-dec2frac')
+        };
+        const modeNames = { 
+            'simplify': 'やくぶん', 'mix2imp': 'かぶんすうへ', 'imp2mix': 'たいぶんすうへ',
+            'frac2dec': '分数→小数', 'dec2frac': '小数→分数'
         };
 
-        // 最大公約数を求める関数（約分の問題生成に必要）
-        function gcd(a, b) {
-            return b === 0 ? a : gcd(b, a % b);
-        }
+        const levelBtns = document.querySelectorAll('.level-btn');
 
-        // 指定範囲のランダムな整数を生成する関数
-        function getRandomInt(min, max) {
-            return Math.floor(Math.random() * (max - min + 1)) + min;
-        }
+        function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+        function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
-        // 新しい問題を生成し、画面に描画する関数
         function generateProblem() {
-            elFeedback.innerHTML = ''; // フィードバックをクリア
-            hasCountedCurrentProblem = false; // 問題が変わったらカウント可能にする
+            elFeedback.innerHTML = ''; 
+            hasCountedCurrentProblem = false; 
             
             if (currentMode === 'simplify') {
                 elInstruction.innerText = '💡 やくぶん しよう！';
-                
-                // 互いに素な（これ以上約分できない）分母と分子を生成
                 let d, n;
-                do {
-                    d = getRandomInt(2, 9);
-                    n = getRandomInt(1, d - 1);
-                } while (gcd(n, d) !== 1);
+                // レベルごとの分母の範囲
+                if (currentLevel === 1) { do { d = getRandomInt(2, 9); n = getRandomInt(1, d - 1); } while (gcd(n, d) !== 1); }
+                else if (currentLevel === 2) { do { d = getRandomInt(10, 24); n = getRandomInt(2, d - 1); } while (gcd(n, d) !== 1); }
+                else { do { d = getRandomInt(25, 60); n = getRandomInt(2, d - 1); } while (gcd(n, d) !== 1); }
                 
-                // 掛ける数を決めて、約分前の分数を生成
-                const multiplier = getRandomInt(2, 5);
-                const qn = n * multiplier;
-                const qd = d * multiplier;
+                const multiplier = getRandomInt(2, currentLevel === 1 ? 5 : 4);
+                const qn = n * multiplier; const qd = d * multiplier;
                 
-                currentAnswer = { num: n, den: d }; // 答えを記録
-                currentProblemStr = `${qn}/${qd}`; // 履歴用に記録
-                
-                renderFraction(elQuestion, null, qn, qd); // 問題を表示
-                renderInput(elAnswer, false); // 入力欄を表示（帯分数用の整数枠はなし）
+                currentAnswer = { type: 'fraction', num: n, den: d }; 
+                currentProblemStr = `${qn}/${qd}`; 
+                renderQuestion('fraction', null, qn, qd); 
+                renderInput('fraction'); 
                 
             } else if (currentMode === 'mix2imp') {
                 elInstruction.innerText = '➡️ かぶんすう に なおそう！';
+                let w, d, n;
+                if (currentLevel === 1) { w = getRandomInt(1, 5); d = getRandomInt(2, 9); }
+                else if (currentLevel === 2) { w = getRandomInt(1, 9); d = getRandomInt(10, 15); }
+                else { w = getRandomInt(10, 20); d = getRandomInt(2, 20); }
+                n = getRandomInt(1, d - 1);
                 
-                const w = getRandomInt(1, 5); // 整数部分
-                const d = getRandomInt(2, 9); // 分母
-                const n = getRandomInt(1, d - 1); // 分子
-                
-                currentAnswer = { num: w * d + n, den: d };
-                currentProblemStr = `${w}と${n}/${d}`; // 履歴用に記録
-                
-                renderFraction(elQuestion, w, n, d);
-                renderInput(elAnswer, false);
+                currentAnswer = { type: 'fraction', num: w * d + n, den: d };
+                currentProblemStr = `${w}と${n}/${d}`; 
+                renderQuestion('fraction', w, n, d);
+                renderInput('fraction');
                 
             } else if (currentMode === 'imp2mix') {
                 elInstruction.innerText = '⬅️ たいぶんすう に なおそう！';
+                let w, d, n;
+                if (currentLevel === 1) { w = getRandomInt(1, 5); d = getRandomInt(2, 9); }
+                else if (currentLevel === 2) { w = getRandomInt(1, 9); d = getRandomInt(10, 15); }
+                else { w = getRandomInt(10, 20); d = getRandomInt(2, 20); }
+                n = getRandomInt(1, d - 1);
+                const qn = w * d + n; 
                 
-                const w = getRandomInt(1, 5);
-                const d = getRandomInt(2, 9);
-                const n = getRandomInt(1, d - 1);
-                const qn = w * d + n; // 仮分数の分子
+                currentAnswer = { type: 'mixed', whole: w, num: n, den: d };
+                currentProblemStr = `${qn}/${d}`; 
+                renderQuestion('fraction', null, qn, d);
+                renderInput('mixed'); 
+
+            } else if (currentMode === 'frac2dec') {
+                elInstruction.innerText = '🔢 小数 に なおそう！';
+                let d_list, d, n;
+                if (currentLevel === 1) { d_list = [10, 100]; }
+                else if (currentLevel === 2) { d_list = [2, 4, 5]; }
+                else { d_list = [8, 20, 25, 40, 50]; }
                 
-                currentAnswer = { whole: w, num: n, den: d };
-                currentProblemStr = `${qn}/${d}`; // 履歴用に記録
+                d = d_list[getRandomInt(0, d_list.length - 1)];
+                do { n = getRandomInt(1, d - 1); } while(gcd(n, d) !== 1);
                 
-                renderFraction(elQuestion, null, qn, d);
-                renderInput(elAnswer, true); // 入力欄を表示（帯分数用の整数枠あり）
+                const ansDec = n / d;
+                currentAnswer = { type: 'decimal', val: ansDec };
+                currentProblemStr = `${n}/${d}`;
+                renderQuestion('fraction', null, n, d);
+                renderInput('decimal');
+
+            } else if (currentMode === 'dec2frac') {
+                elInstruction.innerText = '🔢 分数 に なおそう！（やくぶんしてね）';
+                let d_list, d, n;
+                if (currentLevel === 1) { d_list = [10]; }
+                else if (currentLevel === 2) { d_list = [2, 4, 5, 100]; }
+                else { d_list = [8, 20, 25, 40, 50]; }
+                
+                d = d_list[getRandomInt(0, d_list.length - 1)];
+                do { n = getRandomInt(1, d - 1); } while(gcd(n, d) !== 1);
+                
+                const qDec = n / d;
+                currentAnswer = { type: 'fraction', num: n, den: d };
+                currentProblemStr = String(qDec);
+                renderQuestion('decimal', null, qDec, null);
+                renderInput('fraction');
             }
         }
 
-        // 問題の分数を画面に描画する関数（Flexboxで本格的な上下レイアウト）
-        function renderFraction(container, whole, num, den) {
-            let html = '<div class="flex items-center justify-center text-blue-900">';
-            // 帯分数の場合の整数部分
-            if (whole !== null) {
-                html += `<div class="text-7xl md:text-8xl font-black mr-3 mb-2">${whole}</div>`;
+        // 問題エリアの表示分岐
+        function renderQuestion(type, val1, val2, val3) {
+            if (type === 'fraction') {
+                let html = '<div class="flex items-center justify-center text-blue-900">';
+                if (val1 !== null) html += `<div class="text-7xl md:text-8xl font-black mr-3 mb-2">${val1}</div>`;
+                html += `
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="text-6xl md:text-7xl font-bold leading-none mb-2">${val2}</div>
+                        <div class="w-full min-w-[3.5rem] md:min-w-[4.5rem] h-1.5 md:h-2 bg-blue-900 rounded-full"></div>
+                        <div class="text-6xl md:text-7xl font-bold leading-none mt-2">${val3}</div>
+                    </div></div>`;
+                elQuestion.innerHTML = html;
+            } else if (type === 'decimal') {
+                elQuestion.innerHTML = `<div class="text-7xl md:text-8xl font-black text-blue-900 leading-none">${val2}</div>`;
             }
-            // 分数部分
-            html += `
-                <div class="flex flex-col items-center justify-center">
-                    <div class="text-6xl md:text-7xl font-bold leading-none mb-2">${num}</div>
-                    <div class="w-full min-w-[3.5rem] md:min-w-[4.5rem] h-1.5 md:h-2 bg-blue-900 rounded-full"></div>
-                    <div class="text-6xl md:text-7xl font-bold leading-none mt-2">${den}</div>
-                </div>
-            `;
-            html += '</div>';
-            container.innerHTML = html;
         }
 
-        // 入力欄を画面に描画する関数
-        function renderInput(container, hasWhole) {
+        // 入力エリアの表示分岐
+        function renderInput(type) {
             let html = '<div class="flex items-center justify-center">';
-            // 帯分数の場合の整数入力枠
-            if (hasWhole) {
-                html += `<input type="number" id="ans-whole" placeholder="?" class="w-20 h-24 md:w-28 md:h-32 text-5xl md:text-7xl text-center border-4 border-pink-300 rounded-2xl focus:outline-none focus:border-pink-500 mr-4 font-bold text-gray-800 shadow-inner bg-white placeholder-gray-300 transition" />`;
-            }
-            // 分数入力枠
-            html += `
-                <div class="flex flex-col items-center justify-center">
-                    <input type="number" id="ans-num" placeholder="?" class="w-20 h-20 md:w-28 md:h-24 text-5xl md:text-6xl text-center border-4 border-green-300 rounded-2xl focus:outline-none focus:border-green-500 mb-2 font-bold text-gray-800 shadow-inner bg-white placeholder-gray-300 transition" />
-                    <div class="w-full min-w-[6rem] md:min-w-[8rem] h-1.5 md:h-2 bg-gray-600 rounded-full my-1"></div>
-                    <input type="number" id="ans-den" placeholder="?" class="w-20 h-20 md:w-28 md:h-24 text-5xl md:text-6xl text-center border-4 border-green-300 rounded-2xl focus:outline-none focus:border-green-500 mt-2 font-bold text-gray-800 shadow-inner bg-white placeholder-gray-300 transition" />
-                </div>
-            `;
-            html += '</div>';
-            container.innerHTML = html;
             
-            // 少し遅らせてから最初の入力欄にフォーカスを当てる（PC向け）
-            setTimeout(() => {
-                if(hasWhole && document.getElementById('ans-whole')) {
-                    document.getElementById('ans-whole').focus();
-                } else if (document.getElementById('ans-num')) {
-                    document.getElementById('ans-num').focus();
+            if (type === 'mixed' || type === 'fraction') {
+                if (type === 'mixed') {
+                    html += `<input type="number" id="ans-whole" placeholder="?" class="w-16 h-20 md:w-24 md:h-28 text-4xl md:text-6xl text-center border-4 border-pink-300 rounded-2xl focus:outline-none focus:border-pink-500 mr-2 md:mr-4 font-bold text-gray-800 shadow-inner bg-white placeholder-gray-300 transition" />`;
                 }
+                html += `
+                    <div class="flex flex-col items-center justify-center">
+                        <input type="number" id="ans-num" placeholder="?" class="w-16 h-16 md:w-24 md:h-20 text-4xl md:text-5xl text-center border-4 border-green-300 rounded-2xl focus:outline-none focus:border-green-500 mb-2 font-bold text-gray-800 shadow-inner bg-white placeholder-gray-300 transition" />
+                        <div class="w-full min-w-[5rem] md:min-w-[7rem] h-1.5 md:h-2 bg-gray-600 rounded-full my-1"></div>
+                        <input type="number" id="ans-den" placeholder="?" class="w-16 h-16 md:w-24 md:h-20 text-4xl md:text-5xl text-center border-4 border-green-300 rounded-2xl focus:outline-none focus:border-green-500 mt-2 font-bold text-gray-800 shadow-inner bg-white placeholder-gray-300 transition" />
+                    </div>`;
+            } else if (type === 'decimal') {
+                html += `<input type="number" step="0.001" id="ans-dec" placeholder="0.0" class="w-32 h-20 md:w-48 md:h-24 text-4xl md:text-6xl text-center border-4 border-purple-300 rounded-2xl focus:outline-none focus:border-purple-500 font-bold text-gray-800 shadow-inner bg-white placeholder-gray-300 transition" />`;
+            }
+            html += '</div>';
+            elAnswer.innerHTML = html;
+            
+            setTimeout(() => {
+                if(document.getElementById('ans-whole')) document.getElementById('ans-whole').focus();
+                else if (document.getElementById('ans-num')) document.getElementById('ans-num').focus();
+                else if (document.getElementById('ans-dec')) document.getElementById('ans-dec').focus();
             }, 100);
         }
 
-        // こたえあわせの判定処理
         function checkAnswer() {
-            const elNum = document.getElementById('ans-num');
-            const elDen = document.getElementById('ans-den');
-            
-            if (!elNum || !elDen) return;
-
-            const inputNum = elNum.value;
-            const inputDen = elDen.value;
-            
-            // 空欄チェック
-            if (inputNum === '' || inputDen === '') {
-                showFeedback(false, '⚠️ くうらん があるよ！');
-                return;
-            }
-
-            const n = parseInt(inputNum, 10);
-            const d = parseInt(inputDen, 10);
             let isCorrect = false;
+            let userAnswerStr = '';
 
-            // モード別の正誤判定
-            if (currentMode === 'simplify' || currentMode === 'mix2imp') {
-                if (n === currentAnswer.num && d === currentAnswer.den) {
-                    isCorrect = true;
-                }
-            } else if (currentMode === 'imp2mix') {
+            if (currentAnswer.type === 'fraction') {
+                const elNum = document.getElementById('ans-num');
+                const elDen = document.getElementById('ans-den');
+                if (!elNum || !elDen) return;
+                if (elNum.value === '' || elDen.value === '') { showFeedback(false, '⚠️ くうらん があるよ！'); return; }
+                const n = parseInt(elNum.value, 10);
+                const d = parseInt(elDen.value, 10);
+                userAnswerStr = `${n}/${d}`;
+                if (n === currentAnswer.num && d === currentAnswer.den) isCorrect = true;
+
+            } else if (currentAnswer.type === 'mixed') {
                 const elWhole = document.getElementById('ans-whole');
-                const inputWhole = elWhole.value;
-                
-                if (inputWhole === '') {
-                    showFeedback(false, '⚠️ くうらん があるよ！');
-                    return;
-                }
-                const w = parseInt(inputWhole, 10);
-                if (w === currentAnswer.whole && n === currentAnswer.num && d === currentAnswer.den) {
-                    isCorrect = true;
-                }
+                const elNum = document.getElementById('ans-num');
+                const elDen = document.getElementById('ans-den');
+                if (elWhole.value === '' || elNum.value === '' || elDen.value === '') { showFeedback(false, '⚠️ くうらん があるよ！'); return; }
+                const w = parseInt(elWhole.value, 10);
+                const n = parseInt(elNum.value, 10);
+                const d = parseInt(elDen.value, 10);
+                userAnswerStr = `${w}と${n}/${d}`;
+                if (w === currentAnswer.whole && n === currentAnswer.num && d === currentAnswer.den) isCorrect = true;
+
+            } else if (currentAnswer.type === 'decimal') {
+                const elDec = document.getElementById('ans-dec');
+                if (!elDec || elDec.value === '') { showFeedback(false, '⚠️ くうらん があるよ！'); return; }
+                const decVal = parseFloat(elDec.value);
+                userAnswerStr = String(decVal);
+                // 浮動小数点数の微小誤差を考慮
+                if (Math.abs(decVal - currentAnswer.val) < 0.0001) isCorrect = true;
             }
 
-            // --- 成績と履歴の記録 ---
-            // 1つの問題につき、最初の1回目の「こたえあわせ」のみを集計の対象とする
             if (!hasCountedCurrentProblem) {
                 stats.total.attempts++;
                 stats[currentMode].attempts++;
-                
                 if (isCorrect) {
                     stats.total.corrects++;
                     stats[currentMode].corrects++;
                 }
 
-                // ユーザーの入力内容を文字列にする
-                let userAnswerStr = '';
-                if (currentMode === 'imp2mix') {
-                    const w = document.getElementById('ans-whole').value;
-                    userAnswerStr = `${w}と${n}/${d}`;
-                } else {
-                    userAnswerStr = `${n}/${d}`;
-                }
-
-                const modeNames = { 'simplify': 'やくぶん', 'mix2imp': 'かぶんすうへ', 'imp2mix': 'たいぶんすうへ' };
-                
                 historyLog.unshift({
                     mode: modeNames[currentMode],
+                    level: currentLevel,
                     problem: currentProblemStr,
                     answer: userAnswerStr,
                     isCorrect: isCorrect
                 });
 
                 hasCountedCurrentProblem = true;
-                updateStatsUI(); // 画面の成績表示を更新
+                updateStatsUI(); 
             }
 
-            // 結果の表示
-            if (isCorrect) {
-                showFeedback(true, '⭕️ 大せいかい！');
-            } else {
-                showFeedback(false, '❌ おしい！もういちど！');
-            }
+            if (isCorrect) showFeedback(true, '⭕️ 大せいかい！');
+            else showFeedback(false, '❌ おしい！もういちど！');
         }
 
-        // フィードバック（アニメーション文字）を表示する関数
         function showFeedback(isCorrect, text) {
-            if (isCorrect) {
-                elFeedback.innerHTML = `<div class="text-4xl md:text-5xl text-red-500 font-black animate-pop-in drop-shadow-md tracking-wider">${text}</div>`;
-            } else {
-                elFeedback.innerHTML = `<div class="text-3xl md:text-4xl text-blue-600 font-black animate-shake drop-shadow-md tracking-wider">${text}</div>`;
-            }
+            if (isCorrect) elFeedback.innerHTML = `<div class="text-4xl md:text-5xl text-red-500 font-black animate-pop-in drop-shadow-md tracking-wider">${text}</div>`;
+            else elFeedback.innerHTML = `<div class="text-3xl md:text-4xl text-blue-600 font-black animate-shake drop-shadow-md tracking-wider">${text}</div>`;
         }
 
-        // 成績表示と履歴リストを画面に反映させる関数
         function updateStatsUI() {
             const container = document.getElementById('stats-container');
             const calcRate = (c, a) => a === 0 ? 0 : Math.round((c / a) * 100);
             
             container.innerHTML = `
-                <div class="bg-white p-3 rounded-xl shadow-sm text-center border-2 border-orange-200">
-                    <div class="text-sm text-gray-500 font-bold">ぜんたい の せいかい</div>
-                    <div class="text-2xl font-black text-orange-500">${stats.total.corrects} / ${stats.total.attempts} <span class="text-lg text-gray-600">(${calcRate(stats.total.corrects, stats.total.attempts)}%)</span></div>
+                <div class="bg-white p-2 md:p-3 rounded-xl shadow-sm text-center border-2 border-orange-200 col-span-2 md:col-span-3">
+                    <div class="text-xs md:text-sm text-gray-500 font-bold">ぜんたい の せいかい</div>
+                    <div class="text-xl md:text-2xl font-black text-orange-500">${stats.total.corrects} / ${stats.total.attempts} <span class="text-base text-gray-600">(${calcRate(stats.total.corrects, stats.total.attempts)}%)</span></div>
                 </div>
-                <div class="bg-white p-3 rounded-xl shadow-sm text-center border-2 border-yellow-200">
-                    <div class="text-sm text-gray-500 font-bold">やくぶん</div>
-                    <div class="text-xl font-bold text-yellow-500">${stats.simplify.corrects} / ${stats.simplify.attempts} <span class="text-sm text-gray-600">(${calcRate(stats.simplify.corrects, stats.simplify.attempts)}%)</span></div>
+                <div class="bg-white p-2 rounded-xl shadow-sm text-center border-2 border-yellow-200">
+                    <div class="text-xs text-gray-500 font-bold">やくぶん</div>
+                    <div class="text-lg font-bold text-yellow-500">${stats.simplify.corrects} / ${stats.simplify.attempts}</div>
                 </div>
-                <div class="bg-white p-3 rounded-xl shadow-sm text-center border-2 border-green-200">
-                    <div class="text-sm text-gray-500 font-bold">かぶんすう へ</div>
-                    <div class="text-xl font-bold text-green-500">${stats.mix2imp.corrects} / ${stats.mix2imp.attempts} <span class="text-sm text-gray-600">(${calcRate(stats.mix2imp.corrects, stats.mix2imp.attempts)}%)</span></div>
+                <div class="bg-white p-2 rounded-xl shadow-sm text-center border-2 border-green-200">
+                    <div class="text-xs text-gray-500 font-bold">かぶんすう</div>
+                    <div class="text-lg font-bold text-green-500">${stats.mix2imp.corrects} / ${stats.mix2imp.attempts}</div>
                 </div>
-                <div class="bg-white p-3 rounded-xl shadow-sm text-center border-2 border-pink-200">
-                    <div class="text-sm text-gray-500 font-bold">たいぶんすう へ</div>
-                    <div class="text-xl font-bold text-pink-500">${stats.imp2mix.corrects} / ${stats.imp2mix.attempts} <span class="text-sm text-gray-600">(${calcRate(stats.imp2mix.corrects, stats.imp2mix.attempts)}%)</span></div>
+                <div class="bg-white p-2 rounded-xl shadow-sm text-center border-2 border-pink-200">
+                    <div class="text-xs text-gray-500 font-bold">たいぶんすう</div>
+                    <div class="text-lg font-bold text-pink-500">${stats.imp2mix.corrects} / ${stats.imp2mix.attempts}</div>
+                </div>
+                <div class="bg-white p-2 rounded-xl shadow-sm text-center border-2 border-purple-200">
+                    <div class="text-xs text-gray-500 font-bold">分数→小数</div>
+                    <div class="text-lg font-bold text-purple-500">${stats.frac2dec.corrects} / ${stats.frac2dec.attempts}</div>
+                </div>
+                <div class="bg-white p-2 rounded-xl shadow-sm text-center border-2 border-teal-200">
+                    <div class="text-xs text-gray-500 font-bold">小数→分数</div>
+                    <div class="text-lg font-bold text-teal-500">${stats.dec2frac.corrects} / ${stats.dec2frac.attempts}</div>
                 </div>
             `;
 
             const ul = document.getElementById('history-ul');
             ul.innerHTML = '';
-            
             if (historyLog.length === 0) {
                 ul.innerHTML = '<li class="text-center text-gray-400 py-2">まだ きろく がありません</li>';
                 return;
@@ -403,7 +407,7 @@
                 const color = log.isCorrect ? 'text-red-500' : 'text-blue-500';
                 li.innerHTML = `
                     <div class="flex-1 flex items-center flex-wrap gap-2">
-                        <span class="text-xs bg-gray-200 text-gray-700 rounded px-2 py-1">${log.mode}</span>
+                        <span class="text-xs bg-gray-200 text-gray-700 rounded px-2 py-1">${log.mode} Lv${log.level}</span>
                         <span class="font-bold text-gray-700">${log.problem}</span>
                         <span class="text-gray-400">→</span>
                         <span class="font-bold text-gray-700">${log.answer}</span>
@@ -414,47 +418,46 @@
             });
         }
 
-        // 履歴表示のトグルボタンの処理
-        const btnToggleHistory = document.getElementById('btn-toggle-history');
-        const historyList = document.getElementById('history-list');
-        btnToggleHistory.addEventListener('click', () => {
+        document.getElementById('btn-toggle-history').addEventListener('click', function() {
+            const historyList = document.getElementById('history-list');
             historyList.classList.toggle('hidden');
-            if (historyList.classList.contains('hidden')) {
-                btnToggleHistory.innerText = '📝 これまでのきろく をみる';
-            } else {
-                btnToggleHistory.innerText = '📝 きろく をかくす';
-            }
+            this.innerText = historyList.classList.contains('hidden') ? '📝 これまでのきろく をみる' : '📝 きろく をかくす';
         });
 
-        // イベントリスナーの登録：モード切替ボタン
+        // 難易度ボタンのイベント
+        levelBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                levelBtns.forEach(b => {
+                    b.classList.remove('bg-red-400', 'text-white', 'shadow-inner');
+                    b.classList.add('bg-gray-200', 'text-gray-500');
+                });
+                btn.classList.remove('bg-gray-200', 'text-gray-500');
+                btn.classList.add('bg-red-400', 'text-white', 'shadow-inner');
+                
+                currentLevel = parseInt(btn.getAttribute('data-level'), 10);
+                generateProblem(); 
+            });
+        });
+
+        // モード切替ボタンのイベント
         Object.keys(btns).forEach(mode => {
             btns[mode].addEventListener('click', () => {
-                // すべてのボタンのスタイルを非アクティブ（少し透明）にする
                 Object.values(btns).forEach(btn => {
                     btn.classList.remove('opacity-100', 'ring-4', 'ring-offset-2', 'ring-orange-400', 'scale-105');
                     btn.classList.add('opacity-60');
                 });
-                // 押されたボタンをアクティブ（強調）にする
                 btns[mode].classList.remove('opacity-60');
                 btns[mode].classList.add('opacity-100', 'ring-4', 'ring-offset-2', 'ring-orange-400', 'scale-105');
                 
                 currentMode = mode;
-                generateProblem(); // モードを変えたら新しい問題を作る
+                generateProblem(); 
             });
         });
 
-        // イベントリスナーの登録：アクションボタン
         btnCheck.addEventListener('click', checkAnswer);
         btnNext.addEventListener('click', generateProblem);
+        document.addEventListener('keypress', function (e) { if (e.key === 'Enter') checkAnswer(); });
 
-        // Enterキーを押した時にも答え合わせをする（PCキーボード・タブレット用）
-        document.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                checkAnswer();
-            }
-        });
-
-        // アプリ起動時の初期化処理（やくぶんモードを選択状態にする）
         updateStatsUI();
         btns['simplify'].click();
 
