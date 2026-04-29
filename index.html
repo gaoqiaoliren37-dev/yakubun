@@ -84,6 +84,9 @@
             <button id="btn-dec2frac" class="mode-btn bg-teal-400 hover:bg-teal-500 text-white font-bold py-2 px-4 rounded-xl text-base md:text-xl shadow-md transition transform">
                 🔢 小数 ➡️ 分数
             </button>
+            <button id="btn-mixall" class="mode-btn bg-indigo-400 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-xl text-base md:text-xl shadow-md transition transform">
+                🎲 ミックス
+            </button>
         </div>
 
         <!-- 問題表示エリア -->
@@ -146,7 +149,8 @@
             mix2imp: { attempts: 0, corrects: 0 },
             imp2mix: { attempts: 0, corrects: 0 },
             frac2dec: { attempts: 0, corrects: 0 },
-            dec2frac: { attempts: 0, corrects: 0 }
+            dec2frac: { attempts: 0, corrects: 0 },
+            mixall: { attempts: 0, corrects: 0 }
         };
         let historyLog = []; 
 
@@ -162,11 +166,12 @@
             'mix2imp': document.getElementById('btn-mix2imp'),
             'imp2mix': document.getElementById('btn-imp2mix'),
             'frac2dec': document.getElementById('btn-frac2dec'),
-            'dec2frac': document.getElementById('btn-dec2frac')
+            'dec2frac': document.getElementById('btn-dec2frac'),
+            'mixall': document.getElementById('btn-mixall')
         };
         const modeNames = { 
             'simplify': 'やくぶん', 'mix2imp': 'かぶんすうへ', 'imp2mix': 'たいぶんすうへ',
-            'frac2dec': '分数→小数', 'dec2frac': '小数→分数'
+            'frac2dec': '分数→小数', 'dec2frac': '小数→分数', 'mixall': 'ミックス'
         };
 
         const levelBtns = document.querySelectorAll('.level-btn');
@@ -178,7 +183,13 @@
             elFeedback.innerHTML = ''; 
             hasCountedCurrentProblem = false; 
             
-            if (currentMode === 'simplify') {
+            let targetMode = currentMode;
+            if (currentMode === 'mixall') {
+                const modes = ['simplify', 'mix2imp', 'imp2mix', 'frac2dec', 'dec2frac'];
+                targetMode = modes[Math.floor(Math.random() * modes.length)];
+            }
+            
+            if (targetMode === 'simplify') {
                 elInstruction.innerText = '💡 やくぶん しよう！';
                 let d, n;
                 // レベルごとの分母の範囲
@@ -189,12 +200,12 @@
                 const multiplier = getRandomInt(2, currentLevel === 1 ? 5 : 4);
                 const qn = n * multiplier; const qd = d * multiplier;
                 
-                currentAnswer = { type: 'fraction', num: n, den: d }; 
+                currentAnswer = { type: 'fraction', num: n, den: d, originalMode: targetMode }; 
                 currentProblemStr = `${qn}/${qd}`; 
                 renderQuestion('fraction', null, qn, qd); 
                 renderInput('fraction'); 
                 
-            } else if (currentMode === 'mix2imp') {
+            } else if (targetMode === 'mix2imp') {
                 elInstruction.innerText = '➡️ かぶんすう に なおそう！';
                 let w, d, n;
                 if (currentLevel === 1) { w = getRandomInt(1, 5); d = getRandomInt(2, 9); }
@@ -202,12 +213,12 @@
                 else { w = getRandomInt(10, 20); d = getRandomInt(2, 20); }
                 n = getRandomInt(1, d - 1);
                 
-                currentAnswer = { type: 'fraction', num: w * d + n, den: d };
+                currentAnswer = { type: 'fraction', num: w * d + n, den: d, originalMode: targetMode };
                 currentProblemStr = `${w}と${n}/${d}`; 
                 renderQuestion('fraction', w, n, d);
                 renderInput('fraction');
                 
-            } else if (currentMode === 'imp2mix') {
+            } else if (targetMode === 'imp2mix') {
                 elInstruction.innerText = '⬅️ たいぶんすう に なおそう！';
                 let w, d, n;
                 if (currentLevel === 1) { w = getRandomInt(1, 5); d = getRandomInt(2, 9); }
@@ -216,12 +227,12 @@
                 n = getRandomInt(1, d - 1);
                 const qn = w * d + n; 
                 
-                currentAnswer = { type: 'mixed', whole: w, num: n, den: d };
+                currentAnswer = { type: 'mixed', whole: w, num: n, den: d, originalMode: targetMode };
                 currentProblemStr = `${qn}/${d}`; 
                 renderQuestion('fraction', null, qn, d);
                 renderInput('mixed'); 
 
-            } else if (currentMode === 'frac2dec') {
+            } else if (targetMode === 'frac2dec') {
                 elInstruction.innerText = '🔢 小数 に なおそう！';
                 let d_list, d, n;
                 if (currentLevel === 1) { d_list = [10, 100]; }
@@ -232,12 +243,12 @@
                 do { n = getRandomInt(1, d - 1); } while(gcd(n, d) !== 1);
                 
                 const ansDec = n / d;
-                currentAnswer = { type: 'decimal', val: ansDec };
+                currentAnswer = { type: 'decimal', val: ansDec, originalMode: targetMode };
                 currentProblemStr = `${n}/${d}`;
                 renderQuestion('fraction', null, n, d);
                 renderInput('decimal');
 
-            } else if (currentMode === 'dec2frac') {
+            } else if (targetMode === 'dec2frac') {
                 elInstruction.innerText = '🔢 分数 に なおそう！（やくぶんしてね）';
                 let d_list, d, n;
                 if (currentLevel === 1) { d_list = [10]; }
@@ -248,7 +259,7 @@
                 do { n = getRandomInt(1, d - 1); } while(gcd(n, d) !== 1);
                 
                 const qDec = n / d;
-                currentAnswer = { type: 'fraction', num: n, den: d };
+                currentAnswer = { type: 'fraction', num: n, den: d, originalMode: targetMode };
                 currentProblemStr = String(qDec);
                 renderQuestion('decimal', null, qDec, null);
                 renderInput('fraction');
@@ -341,8 +352,12 @@
                     stats[currentMode].corrects++;
                 }
 
+                const modeStr = currentMode === 'mixall' 
+                    ? `ミックス(${modeNames[currentAnswer.originalMode]})`
+                    : modeNames[currentMode];
+
                 historyLog.unshift({
-                    mode: modeNames[currentMode],
+                    mode: modeStr,
                     level: currentLevel,
                     problem: currentProblemStr,
                     answer: userAnswerStr,
@@ -390,6 +405,10 @@
                 <div class="bg-white p-2 rounded-xl shadow-sm text-center border-2 border-teal-200">
                     <div class="text-xs text-gray-500 font-bold">小数→分数</div>
                     <div class="text-lg font-bold text-teal-500">${stats.dec2frac.corrects} / ${stats.dec2frac.attempts}</div>
+                </div>
+                <div class="bg-white p-2 rounded-xl shadow-sm text-center border-2 border-indigo-200">
+                    <div class="text-xs text-gray-500 font-bold">ミックス</div>
+                    <div class="text-lg font-bold text-indigo-500">${stats.mixall.corrects} / ${stats.mixall.attempts}</div>
                 </div>
             `;
 
