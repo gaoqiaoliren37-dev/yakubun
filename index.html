@@ -50,9 +50,16 @@
 
     <div class="w-full max-w-4xl bg-white rounded-[2.5rem] shadow-2xl p-6 md:p-10 border-8 border-orange-200">
         
-        <h1 class="text-3xl md:text-5xl font-black text-center text-orange-500 mb-6 drop-shadow-sm">
-            🌟 ぶんすう マスター 🌟
-        </h1>
+        <!-- ヘッダー（タイトルとデータ操作） -->
+        <div class="relative mb-6">
+            <h1 class="text-3xl md:text-5xl font-black text-center text-orange-500 drop-shadow-sm">
+                🌟 ぶんすう マスター 🌟
+            </h1>
+            <!-- データリセットボタンを追加 -->
+            <button id="btn-reset-data" class="absolute top-0 right-0 mt-1 md:mt-2 bg-gray-200 hover:bg-gray-300 text-gray-500 font-bold py-1 px-3 rounded-lg text-xs md:text-sm transition">
+                🗑️ データを消す
+            </button>
+        </div>
 
         <!-- 難易度切り替えボタン -->
         <div class="flex justify-center gap-2 md:gap-4 mb-6">
@@ -135,8 +142,23 @@
 
     </div>
 
+    <!-- カスタムメッセージモーダル (alertの代わり) -->
+    <div id="custom-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-6 md:p-8 max-w-sm w-full mx-4 shadow-2xl transform scale-100 transition-transform duration-300">
+            <h3 id="modal-title" class="text-xl font-bold text-gray-800 mb-4 text-center">確認</h3>
+            <p id="modal-message" class="text-gray-600 mb-6 text-center">メッセージ</p>
+            <div class="flex justify-center gap-4">
+                <button id="modal-btn-cancel" class="hidden bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-6 rounded-full transition">キャンセル</button>
+                <button id="modal-btn-ok" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-full transition">OK</button>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript ロジック -->
     <script>
+        // --- ローカルストレージ（端末保存）のキー ---
+        const STORAGE_KEY = 'fractionMasterData';
+
         let currentMode = 'simplify';
         let actualMode = 'simplify'; 
         let currentLevel = 1;
@@ -144,7 +166,8 @@
         let currentProblemStr = ''; 
         let hasCountedCurrentProblem = false; 
 
-        let stats = {
+        // 初期化するデータ構造
+        const initialStats = {
             total: { attempts: 0, corrects: 0 },
             simplify: { attempts: 0, corrects: 0 },
             mix2imp: { attempts: 0, corrects: 0 },
@@ -153,6 +176,8 @@
             dec2frac: { attempts: 0, corrects: 0 },
             mix: { attempts: 0, corrects: 0 }
         };
+
+        let stats = JSON.parse(JSON.stringify(initialStats));
         let historyLog = []; 
 
         const elQuestion = document.getElementById('question-container');
@@ -161,6 +186,7 @@
         const elFeedback = document.getElementById('feedback');
         const btnCheck = document.getElementById('btn-check');
         const btnNext = document.getElementById('btn-next');
+        const btnResetData = document.getElementById('btn-reset-data');
 
         const btns = {
             'simplify': document.getElementById('btn-simplify'),
@@ -176,6 +202,81 @@
         };
 
         const levelBtns = document.querySelectorAll('.level-btn');
+
+        // --- データの保存と読み込み処理 ---
+        function saveDataToLocal() {
+            const dataToSave = {
+                stats: stats,
+                historyLog: historyLog
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+        }
+
+        function loadDataFromLocal() {
+            const savedData = localStorage.getItem(STORAGE_KEY);
+            if (savedData) {
+                try {
+                    const parsedData = JSON.parse(savedData);
+                    if (parsedData.stats) stats = parsedData.stats;
+                    if (parsedData.historyLog) historyLog = parsedData.historyLog;
+                } catch (e) {
+                    console.error("データの読み込みに失敗しました", e);
+                    // 壊れている場合は初期化
+                    stats = JSON.parse(JSON.stringify(initialStats));
+                    historyLog = [];
+                }
+            }
+        }
+
+        // --- カスタムモーダル処理 ---
+        const modal = document.getElementById('custom-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalBtnCancel = document.getElementById('modal-btn-cancel');
+        const modalBtnOk = document.getElementById('modal-btn-ok');
+        let modalOkCallback = null;
+
+        function showModal(title, message, isConfirm, onOk) {
+            modalTitle.innerText = title;
+            modalMessage.innerText = message;
+            
+            if (isConfirm) {
+                modalBtnCancel.classList.remove('hidden');
+            } else {
+                modalBtnCancel.classList.add('hidden');
+            }
+
+            modalOkCallback = onOk;
+            modal.classList.remove('hidden');
+        }
+
+        function hideModal() {
+            modal.classList.add('hidden');
+            modalOkCallback = null;
+        }
+
+        modalBtnOk.addEventListener('click', () => {
+            if (modalOkCallback) modalOkCallback();
+            hideModal();
+        });
+
+        modalBtnCancel.addEventListener('click', hideModal);
+
+        // データリセット処理
+        btnResetData.addEventListener('click', () => {
+            showModal('⚠️ データを消去', 'これまでの「せいせき」と「きろく」をすべて消しますか？\n（この操作は元に戻せません）', true, () => {
+                // データを初期化
+                stats = JSON.parse(JSON.stringify(initialStats));
+                historyLog = [];
+                // ローカルストレージをクリア
+                localStorage.removeItem(STORAGE_KEY);
+                // 画面を更新
+                updateStatsUI();
+                showModal('完了', 'データをきれいにしました！', false, null);
+            });
+        });
+
+        // ------------------------------------
 
         function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
         function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
@@ -202,7 +303,7 @@
                 const multiplier = getRandomInt(2, currentLevel === 1 ? 5 : 4);
                 const qn = n * multiplier; const qd = d * multiplier;
                 
-                currentAnswer = { type: 'fraction', valN: qn, valD: qd }; 
+                currentAnswer = { type: 'fraction', valN: n, valD: d }; 
                 currentProblemStr = `${qn}/${qd}`; 
                 renderQuestion('fraction', null, qn, qd); 
                 renderInput('fraction'); 
@@ -214,7 +315,7 @@
                 else if (currentLevel === 2) { w = getRandomInt(1, 9); d = getRandomInt(10, 15); }
                 else { w = getRandomInt(10, 20); d = getRandomInt(2, 20); }
                 
-                n = getRandomInt(1, d - 1); // ここでランダムな帯分数を生成
+                n = getRandomInt(1, d - 1); 
                 
                 const qn = w * d + n;
                 const qd = d;
@@ -232,12 +333,12 @@
                 else { w = getRandomInt(10, 20); d = getRandomInt(2, 20); }
                 n = getRandomInt(1, d - 1);
                 
-                // 約分が必要な仮分数も出題されるように倍率をかける
                 const multiplier = getRandomInt(1, 3);
                 const qn = (w * d + n) * multiplier; 
                 const qd = d * multiplier;
                 
-                currentAnswer = { type: 'mixed', valN: qn, valD: qd };
+                // 正解は必ず既約の帯分数
+                currentAnswer = { type: 'mixed', valW: w, valN: n, valD: d };
                 currentProblemStr = `${qn}/${qd}`; 
                 renderQuestion('fraction', null, qn, qd);
                 renderInput('mixed'); 
@@ -269,14 +370,13 @@
                 do { n = getRandomInt(1, d - 1); } while(gcd(n, d) !== 1);
                 
                 const qDec = n / d;
-                currentAnswer = { type: 'fraction', valN: n, valD: d }; // 必ず既約分数が答えになる
+                currentAnswer = { type: 'fraction', valN: n, valD: d }; 
                 currentProblemStr = String(qDec);
                 renderQuestion('decimal', null, qDec, null);
                 renderInput('fraction');
             }
         }
 
-        // 問題エリアの表示分岐
         function renderQuestion(type, val1, val2, val3) {
             if (type === 'fraction') {
                 let html = '<div class="flex items-center justify-center text-blue-900">';
@@ -293,7 +393,6 @@
             }
         }
 
-        // 入力エリアの表示分岐
         function renderInput(type) {
             let html = '<div class="flex items-center justify-center">';
             
@@ -320,7 +419,6 @@
             }, 100);
         }
 
-        // 正誤判定処理
         function checkAnswer() {
             let isCorrect = false;
             let userAnswerStr = '';
@@ -335,9 +433,8 @@
                 const d = parseInt(elDen.value, 10);
                 userAnswerStr = `${n}/${d}`;
                 
-                // 値が等価であるかのチェック (分数でのクロス掛け算)
                 if (n * currentAnswer.valD === d * currentAnswer.valN) {
-                    if (gcd(n, d) === 1) { // 既約分数になっているかチェック
+                    if (gcd(n, d) === 1) { 
                         isCorrect = true;
                     } else {
                         feedbackMsg = '❌ おしい！まだ やくぶん できるよ！';
@@ -354,17 +451,22 @@
                 const d = parseInt(elDen.value, 10);
                 userAnswerStr = `${w}と${n}/${d}`;
                 
-                // 帯分数を仮分数に変換して値を比較
-                const impN = w * d + n;
-                const impD = d;
-                
-                if (impN * currentAnswer.valD === impD * currentAnswer.valN) {
-                    if (gcd(n, d) === 1 && n < d) { // 既約分数かつ真分数であるか
-                        isCorrect = true;
-                    } else if (n >= d) {
-                        feedbackMsg = '❌ おしい！分子が分母より大きいよ！';
-                    } else {
-                        feedbackMsg = '❌ おしい！まだ やくぶん できるよ！';
+                // 帯分数としての完全一致チェック
+                if (w === currentAnswer.valW && n === currentAnswer.valN && d === currentAnswer.valD) {
+                    isCorrect = true;
+                } else {
+                    // 値は合っているかどうかのチェック
+                    const impN = w * d + n;
+                    const impD = d;
+                    const ansImpN = currentAnswer.valW * currentAnswer.valD + currentAnswer.valN;
+                    const ansImpD = currentAnswer.valD;
+                    
+                    if (impN * ansImpD === impD * ansImpN) {
+                        if (n >= d) {
+                            feedbackMsg = '❌ おしい！分子が分母より大きいよ！';
+                        } else {
+                            feedbackMsg = '❌ おしい！まだ やくぶん できるよ！';
+                        }
                     }
                 }
 
@@ -373,11 +475,9 @@
                 if (!elDec || elDec.value === '') { showFeedback(false, '⚠️ くうらん があるよ！'); return; }
                 const decVal = parseFloat(elDec.value);
                 userAnswerStr = String(decVal);
-                // 少数の浮動小数点の誤差を考慮して比較
                 if (Math.abs(decVal - currentAnswer.val) < 0.0001) isCorrect = true;
             }
 
-            // 成績の記録
             if (!hasCountedCurrentProblem) {
                 stats.total.attempts++;
                 stats[currentMode].attempts++;
@@ -395,8 +495,14 @@
                     answer: userAnswerStr,
                     isCorrect: isCorrect
                 });
+                
+                // 履歴が長くなりすぎないように100件までに制限
+                if (historyLog.length > 100) {
+                    historyLog = historyLog.slice(0, 100);
+                }
 
                 hasCountedCurrentProblem = true;
+                saveDataToLocal(); // ★ データを保存
                 updateStatsUI(); 
             }
 
@@ -475,7 +581,6 @@
             this.innerText = historyList.classList.contains('hidden') ? '📝 これまでのきろく をみる' : '📝 きろく をかくす';
         });
 
-        // 難易度ボタンのイベント
         levelBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 levelBtns.forEach(b => {
@@ -490,7 +595,6 @@
             });
         });
 
-        // モード切替ボタンのイベント
         Object.keys(btns).forEach(mode => {
             btns[mode].addEventListener('click', () => {
                 Object.values(btns).forEach(btn => {
@@ -509,11 +613,15 @@
         btnNext.addEventListener('click', generateProblem);
         document.addEventListener('keypress', function (e) { if (e.key === 'Enter') checkAnswer(); });
 
+        // --- 初期化 ---
+        loadDataFromLocal(); // ページ読み込み時にデータを復元
         updateStatsUI();
         btns['simplify'].click();
 
     </script>
 </body>
 </html>
+
+
 
 
